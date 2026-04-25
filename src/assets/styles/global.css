@@ -13,6 +13,7 @@
 
     --color-primary-container: #39e29b;
     --color-on-primary-container: #09231a;
+    --color-primary-gradient: linear-gradient(135deg, #39E29B, #008f45);
 
     /* Border Radius Scale */
     --radius-inner: 12px;

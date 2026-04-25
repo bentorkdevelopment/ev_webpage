@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
 import ChargerImg from "../assets/images/thankyou.png";
 import Logo from "../assets/images/logo-1.png";
+import "../assets/styles/global.css";
 
 const ThankYou = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const ThankYou = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate("/config-charging");
-    }, 3000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [navigate]);
@@ -89,13 +90,13 @@ const ThankYou = () => {
         }
 
         .ty-brand-logo {
-            height: 92px;
+            height: 28px;
             opacity: 0.9;
             margin-bottom: 40px;
         }
 
         .ty-hero-img {
-            width: 180px;
+            width: 220px;
             height: auto;
             margin-bottom: 32px;
             /* User commented out filter/anim, keeping it clean or minimal float? User disabled it. Keeping disabled. */
@@ -161,8 +162,8 @@ const ThankYou = () => {
         </p>
 
         <div className="ty-redirect-pill">
-          <CircularProgress size={16} sx={{ color: '#39e29b' }} />
-          <span>Redirecting to Home...</span>
+          <CircularProgress size={16} sx={{ color: 'var(--color-primary-container)' }} />
+          <span>Redirecting to Home...</span> 
         </div>
       </div>
     </div>

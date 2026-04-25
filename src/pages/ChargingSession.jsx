@@ -5,19 +5,21 @@ import {
   Paper,
   CircularProgress,
   Button,
-  Switch,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Tooltip
 } from "@mui/material"
-import { Bolt } from "@mui/icons-material"
+import { Bolt, Coffee, Restaurant, LocalMall, Refresh, LocationOn, InfoOutlined } from "@mui/icons-material"
 import { useSession } from "../store/SessionContext"
+import PlacesService from "../services/places.service"
 import "../assets/styles/global.css"
-import notifyIcon from "../assets/images/notify.svg"
-import Flag from "../assets/images/Flag.svg"
+
 import BentorkLogo from "../assets/images/logo-1.png"
+
+
 
 const ChargingSession = () => {
 
@@ -32,22 +34,67 @@ const ChargingSession = () => {
     error,
     isStopping,
     isCompleted,
-    notifyOnComplete,
     isSessionActive,
-    isNotificationDisabled,
     remainingTime,
     initializeSession,
     stopSession,
-    toggleNotification,
     formatTime,
     setError,
     isCustomSession
   } = useSession()
 
+  const handleRefresh = () => {
+    window.location.reload()
+  }
+
+  const [nearbyPlaces, setNearbyPlaces] = useState([])
+  const [isLoadingPlaces, setIsLoadingPlaces] = useState(false)
+
+  // Fetch real Google Maps data if location available, or use fallback
+  useEffect(() => {
+    const fetchWithFallback = async (lat, lng) => {
+      try {
+        const places = await PlacesService.fetchNearbyAmenities(lat, lng);
+        if (places && places.length > 0) {
+          const formattedPlaces = places.map(p => {
+             let icon = Coffee;
+             let color = '#FFA500';
+             if (p.type === 'Restaurant') { icon = Restaurant; color = '#FF4213'; }
+             else if (p.type === 'Shopping mall') { icon = LocalMall; color = '#9C27B0'; }
+             return { ...p, icon, color, distance: 'Nearby' };
+          });
+          setNearbyPlaces(formattedPlaces);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoadingPlaces(false);
+      }
+    };
+
+    setIsLoadingPlaces(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetchWithFallback(position.coords.latitude, position.coords.longitude);
+        },
+        () => {
+          // Fallback location: Bentork Hub (Pune approx)
+          fetchWithFallback(18.5580, 73.8075);
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      fetchWithFallback(18.5580, 73.8075);
+    }
+  }, [])
+
   /* State for smooth visualization */
   const [displayPercentage, setDisplayPercentage] = useState(0)
 
   const [stopDialog, setStopDialog] = useState(false)
+
+
 
   useEffect(() => {
     initializeSession()
@@ -130,6 +177,7 @@ const ChargingSession = () => {
         width: "100%"
       }}
     >
+
       <div className="premium-bg">
         {/* Blob Container */}
         <div className="blob-container-bg">
@@ -160,9 +208,21 @@ const ChargingSession = () => {
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="app-header">
-        <img src={BentorkLogo} alt="Bentork" className="brand-logo" />
+      {/* CREATIVE HEADER */}
+      <header className="creative-top-bar">
+        <div className="glass-capsule animate-slide-down">
+          <div className="logo-section">
+            <img src={BentorkLogo} alt="Bentork" className="capsule-logo" />
+            {/* <div className="capsule-divider"></div>
+            <span className="capsule-title">Charging</span> */}
+          </div>
+          <Button 
+            className="capsule-refresh-btn" 
+            onClick={handleRefresh}
+          >
+            <Refresh className="refresh-spin-icon" />
+          </Button>
+        </div>
       </header>
 
       {/* MAIN CONTENT - FLEXIBLE LAYOUT */}
@@ -197,8 +257,11 @@ const ChargingSession = () => {
               <h1 className="charge-percent">
                 {isCustomSession ? '+' : ''}{displayPercentage.toFixed(2)}<span className="unit">%</span>
               </h1>
-              <span className="charge-status">
-                {isCustomSession ? 'Est. Charged' : 'Completed'}
+              <span className="charge-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isCustomSession ? 'Est. Charged' : 'Approx.'}
+                <Tooltip title={isCustomSession ? "Estimated charge based on customized limit." : "Approximate charge percentage based on live session metrics."} arrow enterTouchDelay={0} leaveTouchDelay={4000} placement="top">
+                  <InfoOutlined sx={{ fontSize: 14, ml: 0.5, opacity: 0.6, cursor: 'pointer' }} />
+                </Tooltip>
               </span>
             </div>
           </div>
@@ -209,7 +272,12 @@ const ChargingSession = () => {
           {/* METRICS GRID */}
           <div className="metrics-grid">
             <div className="glass-card metric-card">
-              <span className="metric-label">Energy Delivered</span>
+              <span className="metric-label" style={{ display: 'flex', alignItems: 'center' }}>
+                Energy Delivered
+                <Tooltip title="Total energy transferred to your vehicle, measured in kilowatt-hours (kWh)." arrow enterTouchDelay={0} leaveTouchDelay={4000} placement="top">
+                  <InfoOutlined sx={{ fontSize: 13, ml: 0.5, opacity: 0.6, cursor: 'pointer' }} />
+                </Tooltip>
+              </span>
               <div className="metric-value-row">
                 <span className="metric-val">{Number(chargingData.energyUsed || 0).toFixed(2)}</span>
                 <span className="metric-unit">kWh</span>
@@ -217,41 +285,68 @@ const ChargingSession = () => {
             </div>
 
             <div className="glass-card metric-card">
-              <span className="metric-label">Session Duration</span>
+              <span className="metric-label" style={{ display: 'flex', alignItems: 'center' }}>
+                Session Duration
+                <Tooltip title="The active time your vehicle has been plugged in and consuming power." arrow enterTouchDelay={0} leaveTouchDelay={4000} placement="top">
+                  <InfoOutlined sx={{ fontSize: 13, ml: 0.5, opacity: 0.6, cursor: 'pointer' }} />
+                </Tooltip>
+              </span>
               <div className="metric-value-row">
                 <span className="metric-val">{(remainingTime === '--:--' || !remainingTime) ? '00:00' : remainingTime}</span>
               </div>
             </div>
           </div>
 
-          {/* NOTIFICATION TOGGLE */}
-          <div className="glass-card notify-row">
-            <div className="notify-info">
-              <div className="notify-icon-box">
-                <img src={notifyIcon} alt="" />
-              </div>
-              <div className="notify-labels">
-                <span className="notify-title">Notify when complete</span>
-                {isNotificationDisabled && <span className="notify-warn">Permission denied by browser</span>}
+          {/* AMENITIES SECTION */}
+          <div className="amenities-section">
+            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center' }}>
+               While you wait 
+               <Tooltip title="Curated nearby spots like cafes and restaurants to enjoy while your vehicle charges." arrow enterTouchDelay={0} leaveTouchDelay={4000} placement="top">
+                 <InfoOutlined sx={{ fontSize: 16, ml: 1, opacity: 0.6, cursor: 'pointer' }} />
+               </Tooltip>
+               {isLoadingPlaces && <CircularProgress size={12} sx={{ml: 1, color: '#aaa'}}/>}
+            </h3>
+            <div className="amenities-scroll-wrapper">
+              <div className="amenities-scroll">
+                {!isLoadingPlaces && nearbyPlaces.length === 0 ? (
+                   <div style={{ color: '#888', fontSize: '13px', fontStyle: 'italic', padding: '20px 0', width: '100%', textAlign: 'center' }}>
+                      No nearby spots found right now.
+                   </div>
+                ) : 
+                  nearbyPlaces.map((place, idx) => {
+                    const Icon = place.icon;
+                  return (
+                    <div key={idx} className="amenity-card" onClick={() => {
+                       // If location exists, can open Google Maps
+                       if (place.geometry?.location) {
+                          const url = `https://www.google.com/maps/search/?api=1&query=${place.geometry.location.lat},${place.geometry.location.lng}`;
+                          window.open(url, '_blank');
+                       }
+                    }}>
+                      {place.photoUrl ? (
+                        <div className="amenity-photo-box" style={{ backgroundImage: `url(${place.photoUrl})` }}></div>
+                      ) : (
+                        <div className="amenity-icon-box" style={{ backgroundColor: place.color + '22' }}>
+                          <Icon style={{ color: place.color, fontSize: 32 }} />
+                        </div>
+                      )}
+                      <div className="amenity-content">
+                        <span className="amenity-name">{place.name}</span>
+                        <div className="amenity-meta">
+                          <span className="amenity-rating">★ {place.rating}</span>
+                          {place.isOpen !== undefined && (
+                             <span style={{ color: place.isOpen ? '#00E676' : '#FF4213', fontWeight: 'bold' }}>
+                                {place.isOpen ? 'Open' : 'Closed'}
+                             </span>
+                          )}
+                          <span className="amenity-distance">• {place.distance}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-            <Switch
-              checked={notifyOnComplete}
-              onChange={toggleNotification}
-              disabled={isNotificationDisabled}
-              size="small" // Make switch slightly smaller
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: 'var(--color-primary-container)',
-                },
-                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                  backgroundColor: 'var(--color-primary-container)',
-                },
-                '& .MuiSwitch-track': {
-                  backgroundColor: '#555'
-                }
-              }}
-            />
           </div>
         </div>
       </div>
@@ -272,10 +367,6 @@ const ChargingSession = () => {
         </div>
 
         <div className="action-row">
-          <Button className="icon-action-btn glass-btn" onClick={handleStopClick}>
-            <img src={Flag} alt="Report" />
-          </Button>
-
           <Button
             variant="contained"
             fullWidth
@@ -283,7 +374,7 @@ const ChargingSession = () => {
             onClick={handleStopClick}
             disabled={isStopping || isCompleted || !isSessionActive || isInitializing}
           >
-            {isStopping ? "Stopping..." : "Stop Charging"}
+            {isStopping ? "Stopping..." : "End Session"}
           </Button>
         </div>
 
@@ -326,6 +417,7 @@ const ChargingSession = () => {
         </DialogActions>
       </Dialog>
 
+
       <style>{`
         /* PREMIUM STYLES */
         .premium-bg {
@@ -336,20 +428,86 @@ const ChargingSession = () => {
         }
 
         
-        /* HEADER */
-        .app-header {
+        /* CREATIVE APP HEADER */
+        .creative-top-bar {
             position: relative;
-            z-index: 10;
+            z-index: 50;
             display: flex;
             justify-content: center;
-            padding: 16px 0 0;
+            padding: 20px 24px 0;
             flex-shrink: 0;
-            height: 60px;
-        }
-        .brand-logo {
-            height: 82px;
             width: 100%;
-            opacity: 1;
+        }
+        
+        .animate-slide-down {
+            animation: slide-down 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slide-down {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .glass-capsule {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(40, 40, 40, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 8px 10px 8px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .capsule-logo {
+            height: 16px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .capsule-divider {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .capsule-title {
+            color: #fff;
+            font-size: 10px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .capsule-refresh-btn {
+            min-width: 40px !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: var(--color-primary-container) !important;
+            padding: 0 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .capsule-refresh-btn:hover {
+            background: rgba(57, 226, 155, 0.15) !important;
+            transform: rotate(90deg);
+        }
+
+        .refresh-spin-icon {
+            font-size: 20px !important;
         }
 
         /* MAIN LAYOUT WRAPPER */
@@ -514,41 +672,103 @@ const ChargingSession = () => {
             font-weight: 500;
         }
 
-        /* NOTIFY ROW */
-        .notify-row {
+        /* AMENITIES SECTION */
+        .amenities-section {
             padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            overflow: hidden;
+            margin-top: 0px;
+            margin-bottom: 0px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
         }
-        .notify-info {
+        .section-title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            font-family: var(--font-primary);
+        }
+        .amenities-scroll-wrapper {
+            margin: 0 -24px;
+            /* Fade effect on the scrolling edges */
+            -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+            mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+        }
+        .amenities-scroll {
             display: flex;
-            align-items: center;
+            overflow-x: auto;
             gap: 12px;
+            padding: 0 24px 10px 24px;
+            scrollbar-width: none; /* Firefox */
         }
-        .notify-icon-box {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
+        .amenities-scroll::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+        .amenity-card {
+            background: #2A2A2A;
+            border-radius: 16px;
+            min-width: 150px;
+            width: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        .amenity-card:active {
+            transform: scale(0.96);
+        }
+        .amenity-icon-box {
+            height: 90px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #3E2723;
         }
-        .notify-icon-box img {
-            width: 16px;
-            height: 16px;
-            filter: grayscale(1);
+        .amenity-photo-box {
+            height: 90px;
+            background-size: cover;
+            background-position: center;
+            background-color: #333;
         }
-        .notify-labels { display: flex; flex-direction: column; }
-        .notify-title {
+        .amenity-content {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+        }
+        .amenity-name {
+            color: #fff;
             font-size: 13px;
             font-weight: 600;
-            color: #eee;
+            margin-bottom: 6px;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
         }
-        .notify-warn {
-            font-size: 9px;
-            color: #fca5a5;
+        .amenity-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-top: auto;
+        }
+        .amenity-rating {
+            color: #FFD700;
+            font-weight: 700;
+        }
+        .amenity-distance {
+            color: #ccc;
         }
 
         /* FIXED FOOTER */
@@ -670,20 +890,26 @@ const ChargingSession = () => {
         /* BLOB ANIMATIONS */
         .blob-container-bg {
             position: absolute;
-            bottom: -50vh;
-            right: -25vh;
-            width: 100vh;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             height: 100vh;
             z-index: 1;
             pointer-events: none;
             opacity: 0;
             animation: blob-enter 1.5s ease-out 3s forwards;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            overflow: hidden;
         }
 
         .blob-container-bg svg {
-            width: 100%;
-            height: 100%;
+            width: 120vw;
+            height: auto;
+            min-height: 100%;
             filter: blur(25px);
+            transform-origin: bottom center;
         }
 
         .blob-layer { transform-origin: center; }

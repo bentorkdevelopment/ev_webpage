@@ -11,6 +11,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Gradient Palette */
+  --primary-gradient: linear-gradient(180deg, #39E29B 40%, #008f45 100%);
 }
 
 a {

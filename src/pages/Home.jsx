@@ -18,9 +18,16 @@ const homeStyles = `
     font-family: var(--font-primary, Roboto, sans-serif);
     position: relative;
     overflow-x: hidden;
-    padding-bottom: 100px;
+    overflow-y: auto !important;
+    padding-bottom: 0px;
     width: 100%;
-    box-sizing: border-box;
+}
+
+html, body {
+    overflow-y: auto !important;
+    height: auto !important;
+    margin: 0;
+    padding: 0;
 }
 
 .home-page * {
@@ -90,7 +97,7 @@ const homeStyles = `
 }
 
 .top-logo {
-    height: 50px;
+    height: 20px;
     width: auto;
 }
 
@@ -123,11 +130,12 @@ const homeStyles = `
 .home-content {
     position: relative;
     z-index: 10;
-    padding: 100px 20px 20px;
+    padding: 100px 20px 36px;
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
     box-sizing: border-box;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* WELCOME */
@@ -155,7 +163,7 @@ const homeStyles = `
 /* SCAN CARD */
 .scan-card {
     background: linear-gradient(135deg, rgba(57, 226, 155, 0.15), rgba(57, 226, 155, 0.05));
-    border: 1px solid rgba(57, 226, 155, 0.3);
+    border: 2px solid rgba(57, 226, 155, 0.3);
     border-radius: 20px;
     padding: 24px;
     display: flex;
@@ -209,6 +217,66 @@ const homeStyles = `
     font-size: 24px;
     color: #39E29B;
     font-weight: 300;
+}
+
+/* ===== LANDING SECTIONS ===== */
+.landing-section {
+    width: 100%;
+    margin-top: 36px;
+    padding: 4px 0;
+}
+
+.section-inner {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.full-bleed-section {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 48px 0;
+    margin: 48px 0;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.benefit-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(14px);
+    transition: transform 0.3s, background 0.3s;
+}
+
+.benefit-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-4px);
+}
+
+.stat-item h4 {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, var(--color-primary-container), #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* SEARCH BAR */
@@ -503,6 +571,8 @@ const homeStyles = `
 
 import Logo from "../assets/images/logo-1.png";
 import WalletIcon from "../assets/images/wallet.svg";
+import AppFeaturesMockup from "../assets/images/app_features_mockup.jpg";
+import CacheService from "../services/cache.service";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from '@mui/icons-material/Search';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
@@ -519,6 +589,22 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SchoolIcon from "@mui/icons-material/School";
 import QuizIcon from "@mui/icons-material/Quiz";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import PowerIcon from "@mui/icons-material/Power";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import EastIcon from '@mui/icons-material/East';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SecurityIcon from '@mui/icons-material/Security';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import EvStationIcon from '@mui/icons-material/EvStation';
+import MapIcon from '@mui/icons-material/Map';
+import LocalCafeIcon from '@mui/icons-material/LocalCafe';
+import NearMeIcon from '@mui/icons-material/NearMe';
+import RouteIcon from '@mui/icons-material/Route';
+import TimerIcon from '@mui/icons-material/Timer';
+import MailIcon from '@mui/icons-material/Mail';
+import { motion } from "framer-motion";
 
 const sidebarConfig = {
     user: {
@@ -534,12 +620,19 @@ const sidebarConfig = {
             ]
         },
         {
+            section: "features",
+            items: [
+                { label: "Buy Station", icon: <ShoppingCartIcon />, action: 'buy' },
+                { label: "Trip Planner", icon: <MapIcon />, action: 'trip' },
+            ]
+        },
+        {
             section: "support",
             items: [
-                { label: "Help", icon: <HelpOutlineIcon /> },
+                { label: "Help", icon: <HelpOutlineIcon />, path: "/faq" },
                 { label: "FAQ", icon: <QuizIcon />, path: "/faq" },
                 { label: "Tutorial", icon: <SchoolIcon />, path: "/onboarding-1" },
-                { label: "Download App", icon: <DownloadIcon /> }
+                { label: "Download App", icon: <DownloadIcon />, external: "https://play.google.com/store/apps/details?id=com.bentork.application" }
             ]
         },
 
@@ -547,8 +640,8 @@ const sidebarConfig = {
             section: "legal",
             items: [
                 { label: "Terms & Conditions", icon: <DescriptionIcon />, path: "/terms" },
-                { label: "Privacy Policy", icon: <PrivacyTipIcon /> },
-                { label: "About Us", icon: <InfoOutlinedIcon /> }
+                { label: "Privacy Policy", icon: <PrivacyTipIcon />, path: "/privacy" },
+                { label: "About Us", icon: <InfoOutlinedIcon />, path: "/about" }
             ]
         }
     ]
@@ -562,44 +655,55 @@ const Home = () => {
     const { user, logout } = useAuth();
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [imgError, setImgError] = useState(false);
+    const [showScannerGuide, setShowScannerGuide] = useState(false);
+    const [showBuyStationDialog, setShowBuyStationDialog] = useState(false);
+    const [showTripPlannerDialog, setShowTripPlannerDialog] = useState(false);
+    const [activeSession, setActiveSession] = useState(() => CacheService.getSessionData());
+    const [activeStep, setActiveStep] = useState(0); // Track active flow step
+    const [isAutoLooping, setIsAutoLooping] = useState(true); // Track if auto-cycling is active
 
-    // Stations State
-    const [stations, setStations] = useState([
-        { id: "OCPPCHG-1123-0116", name: "BENTORK PLUS-16", distance: "0.5 km", status: "Loading...", type: "AC Type 2", power: "1kW" },
-        { id: "OCPPCHG-1123-0117", name: "BENTORK PLUS-17", distance: "0.5 km", status: "Loading...", type: "AC Type 2", power: "1kW" },
-        { id: "OCPP-100", name: "BENTORK PRO-100", distance: "0.5 km", status: "Loading...", type: "DC Fast", power: "10kW" },
-    ]);
+    const handleScanClick = () => {
+        const isAndroid = /Android/i.test(navigator.userAgent);
 
-    // Fetch Stations Status
-    React.useEffect(() => {
-        const fetchStatuses = async () => {
-            const updated = await Promise.all(stations.map(async (station) => {
-                try {
-                    const response = await ApiService.get(API_CONFIG.ENDPOINTS.GET_CHARGER(station.id));
-                    // Assuming response has a 'status' field
-                    return {
-                        ...station,
-                        status: response?.status || "Offline"
-                    };
-                } catch (err) {
-                    console.error(`Failed to fetch status for ${station.id}`, err);
-                    return { ...station, status: "Offline" }; // Fallback
-                }
-            }));
-            setStations(updated);
-        };
+        if (isAndroid) {
+            const intentUrl = "intent://#Intent;package=com.google.ar.lens;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fsearch%3Fq%3Dgoogle%2520lens%26c%3Dapps;end";
+            window.location.href = intentUrl;
 
-        fetchStatuses();
-
-        // Optional: Poll every 10 seconds?
-        const interval = setInterval(fetchStatuses, 10000);
-        return () => clearInterval(interval);
-    }, []);
+            setTimeout(() => {
+                setShowScannerGuide(true);
+            }, 100);
+        } else {
+            setShowScannerGuide(true);
+        }
+    };
 
     // Reset imgError when user picture changes
     React.useEffect(() => {
         setImgError(false);
     }, [user?.picture]);
+
+    // Poll active session from cache every 5s
+    React.useEffect(() => {
+        const refresh = () => {
+            const session = CacheService.getSessionData();
+            const isActive = session && ['ACTIVE', 'INITIATED'].includes(String(session.status).toUpperCase());
+            setActiveSession(isActive ? session : null);
+        };
+        refresh();
+        const interval = setInterval(refresh, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Auto-cycling logic for the 3 steps
+    React.useEffect(() => {
+        let interval;
+        if (isAutoLooping) {
+            interval = setInterval(() => {
+                setActiveStep((prev) => (prev + 1) % 3);
+            }, 4000); // 4-second interval
+        }
+        return () => clearInterval(interval);
+    }, [isAutoLooping]);
 
     // Drawer Drag Logic
     const [drawerStartX, setDrawerStartX] = useState(0);
@@ -699,7 +803,14 @@ const Home = () => {
                                         key={i}
                                         className="item"
                                         onClick={() => {
-                                            if (item.path) {
+                                            setDrawerOpen(false);
+                                            if (item.action === 'buy') {
+                                                setShowBuyStationDialog(true);
+                                            } else if (item.action === 'trip') {
+                                                setShowTripPlannerDialog(true);
+                                            } else if (item.external) {
+                                                window.open(item.external, '_blank', 'noopener noreferrer');
+                                            } else if (item.path) {
                                                 navigate(item.path);
                                             }
                                         }}
@@ -744,55 +855,785 @@ const Home = () => {
                 {/* WELCOME SECTION */}
                 <div className="welcome-section">
                     <p className="greeting">Hello, {user?.name?.split(' ')[0] || "Driver"} 👋</p>
-                    <h1 className="main-heading">Ready to charge?</h1>
+                    <h1 className="main-heading">{activeSession ? 'Session in progress.' : 'Ready to charge?'}</h1>
                 </div>
 
-                {/* SCAN CARD */}
-                <div className="scan-card" onClick={() => navigate('/config-charging')}>
-                    <div className="scan-content">
-                        <div className="scan-icon-wrapper">
-                            <QrCodeScannerIcon className="scan-icon" />
+                {/* SCAN CARD / ACTIVE SESSION CARD */}
+                {activeSession ? (
+                    // ── ACTIVE SESSION MINI CARD ──
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="scan-card"
+                        onClick={() => navigate('/charging-session')}
+                        style={{ cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+                    >
+                        {/* Pulsing green glow */}
+                        <motion.div
+                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            style={{
+                                position: 'absolute', inset: 0,
+                                background: 'radial-gradient(ellipse at 20% 50%, rgba(57,226,155,0.15) 0%, transparent 70%)',
+                                pointerEvents: 'none'
+                            }}
+                        />
+                        <div className="scan-content">
+                            <div className="scan-icon-wrapper" style={{ background: 'rgba(57,226,155,0.15)' }}>
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    <BoltIcon className="scan-icon" style={{ color: 'var(--color-primary-container)' }} />
+                                </motion.div>
+                            </div>
+                            <div className="scan-text">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                                    <span style={{
+                                        width: '7px', height: '7px', borderRadius: '50%',
+                                        background: 'var(--color-primary-container)',
+                                        display: 'inline-block',
+                                        boxShadow: '0 0 6px rgba(57,226,155,0.8)'
+                                    }} />
+                                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-container)', letterSpacing: '0.05em' }}>CHARGING ACTIVE</span>
+                                </div>
+                                <h2>Active Session</h2>
+                                <p>Tap to view your live charging progress</p>
+                            </div>
                         </div>
-                        <div className="scan-text">
-                            <h2>Scan QR Code</h2>
-                            <p>Scan the code on the charger to start</p>
+                        <div className="scan-arrow">→</div>
+                    </motion.div>
+                ) : (
+                    // ── SCAN QR CARD ──
+                    <div className="scan-card" onClick={handleScanClick}>
+                        <div className="scan-content">
+                            <div className="scan-icon-wrapper">
+                                <QrCodeScannerIcon className="scan-icon" />
+                            </div>
+                            <div className="scan-text">
+                                <h2>Scan QR Code</h2>
+                                <p>Scan the code on the charger to start</p>
+                            </div>
+                        </div>
+                        <div className="scan-arrow">→</div>
+                    </div>
+                )}
+
+                {/* Trust Indicator */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 0.5 }}
+                    viewport={{ once: true }}
+                    style={{
+                        marginTop: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                    }}>
+                    
+                </motion.div>
+            </div>
+
+            {/* FULL WIDTH LANDING EXPERIENCE */}
+            <div className="landing-area" style={{ position: 'relative', zIndex: 10, width: '100%', paddingBottom: '0px' }}>
+
+                {/* Visual Depth Blobs */}
+                <div style={{
+                    position: 'absolute',
+                    top: '10%',
+                    right: '-20%',
+                    width: '600px',
+                    height: '600px',
+                    background: 'radial-gradient(circle, rgba(57, 226, 155, 0.03) 0%, transparent 70%)',
+                    filter: 'blur(80px)',
+                    zIndex: -1,
+                    pointerEvents: 'none'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '20%',
+                    left: '-20%',
+                    width: '500px',
+                    height: '500px',
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 70%)',
+                    filter: 'blur(80px)',
+                    zIndex: -1,
+                    pointerEvents: 'none'
+                }} />
+                {/* 1. GUIDED STEPS SECTION */}
+                <section className="landing-section">
+                    <div className="section-inner">
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            style={{ textAlign: 'center', marginBottom: '32px' }}
+                        >
+                            <h1 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 12px', background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.4))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>How it works.</h1>
+                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', maxWidth: '400px', margin: '0 auto' }}>
+                                A simple three-step process to get you back on the road.
+                            </p>
+                        </motion.div>
+
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '12px',
+                        }}>
+                            {[
+                                { label: "Scan", icon: <QrCodeScannerIcon />, desc: "Focus your camera on the charger QR." },
+                                { label: "Plug", icon: <PowerIcon />, desc: "Connect the charger to your EV's port." },
+                                { label: "Go", icon: <PlayArrowIcon />, desc: "Pay & track your session in real-time." }
+                            ].map((step, idx) => (
+                                <React.Fragment key={idx}>
+                                    <motion.div
+                                        onClick={() => {
+                                            setActiveStep(idx);
+                                            setIsAutoLooping(false); // Stop loop on manual interaction
+                                        }}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: idx * 0.1, type: 'spring', damping: 20 }}
+                                        style={{
+                                            flex: '0 1 auto',
+                                            width: '94px',
+                                            height: '94px',
+                                            background: activeStep === idx ? 'rgba(57, 226, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                                            border: activeStep === idx ? '2px solid var(--color-primary-container)' : '2px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '24px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            backdropFilter: 'blur(10px)',
+                                            cursor: 'pointer',
+                                            transition: '0.3s'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '32px',
+                                            height: '32px',
+                                            background: activeStep === idx ? 'rgba(57, 226, 155, 0.2)' : 'rgba(57, 226, 155, 0.1)',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'var(--color-primary-container)',
+                                            marginBottom: '8px'
+                                        }}>
+                                            {React.cloneElement(step.icon, { style: { fontSize: '18px' } })}
+                                        </div>
+                                        <span style={{ fontSize: '12px', fontWeight: 600 }}>{step.label}</span>
+                                    </motion.div>
+                                    {idx < 2 && (
+                                        <motion.div
+                                            animate={{ x: [0, 5, 0], opacity: [0.2, 0.5, 0.2] }}
+                                            transition={{ repeat: Infinity, duration: 2 }}
+                                        >
+                                            <EastIcon style={{ fontSize: '14px', color: 'rgba(255,255,255,0.2)' }} />
+                                        </motion.div>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+
+                        {/* STEP DETAIL VIEW */}
+                        <motion.div
+                            key={activeStep}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{
+                                marginTop: '24px',
+                                textAlign: 'center',
+                                minHeight: '60px',
+                                padding: '0 20px'
+                            }}
+                        >
+                            <p style={{ 
+                                fontSize: '13px', 
+                                color: 'rgba(255,255,255,0.6)', 
+                                lineHeight: '1.6',
+                                maxWidth: '300px',
+                                margin: '0 auto'
+                            }}>
+                                <span style={{ color: 'var(--color-primary-container)', fontWeight: 700, marginRight: '4px' }}>
+                                    {[ "Scan:", "Plug:", "Go:" ][activeStep]}
+                                </span>
+                                {[
+                                    "Focus your camera on the unique QR code located on the charger faceplate.",
+                                    "Firmly insert the charging cable into your vehicle's port until it locks.",
+                                    "Authorize payment and monitor your session progress in real-time."
+                                ][activeStep]}
+                            </p>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* COMING SOON — APP FEATURES TEASER */}
+                <section className="landing-section" style={{ marginTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '36px' }}>
+                    <div className="section-inner">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            style={{ textAlign: 'center', marginBottom: '32px' }}
+                        >
+                            <span style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                letterSpacing: '0.14em',
+                                textTransform: 'uppercase',
+                                color: 'var(--color-primary-container)',
+                                display: 'block',
+                                marginBottom: '10px'
+                            }}>LIVE NOW</span>
+                            <h3 style={{
+                                fontSize: '22px',
+                                fontWeight: 700,
+                                margin: '0 0 10px',
+                                background: 'linear-gradient(90deg, #fff 40%, rgba(255,255,255,0.35))',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>More power in the app.</h3>
+                            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', maxWidth: '300px', margin: '0 auto', lineHeight: 1.7 }}>
+                                Advanced features are on the way — all living inside the Bentork app.
+                            </p>
+                        </motion.div>
+
+                        {/* 2:3 MOCK IMAGE */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ type: 'spring', damping: 18 }}
+                            style={{
+                                margin: '0 auto',
+                                width: '100%',
+                                maxWidth: '240px',
+                                aspectRatio: '2 / 3',
+                                borderRadius: '28px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                border: '0px solid rgba(57, 226, 155, 0.2)',
+                                boxShadow: '6px 8px 28px rgba(0,0,0,0.5), 0 0 40px rgba(57, 226, 155, 0.08)'
+                            }}
+                        >
+                            <img
+                                src={AppFeaturesMockup}
+                                alt="App features preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                            {/* Gradient overlay at bottom */}
+                            <div style={{
+                                position: 'absolute',
+                                top: 0, left: 0, right: 0,
+                                height: '45%',
+                                background: 'linear-gradient(to bottom, rgba(10,10,10,0.85) 0%, transparent 100%)'
+                            }} />
+                            {/* Floating label */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '20px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: 'rgba(57,226,155,0.15)',
+                                border: '1px solid rgba(57,226,155,0.3)',
+                                borderRadius: '20px',
+                                padding: '6px 14px',
+                                backdropFilter: 'blur(8px)',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-container)' }}>
+                                    Live Station Map
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* FEATURE PILLS */}
+                        <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '10px',
+                            justifyContent: 'center',
+                            marginTop: '28px'
+                        }}>
+                            {[
+                                { icon: <RouteIcon />,     label: 'Trip Planner' },
+                                { icon: <MapIcon />,       label: 'Station Map' },
+                                { icon: <LocalCafeIcon />, label: 'Nearby Amenities' },
+                                { icon: <NearMeIcon />,    label: 'Real-time Range' },
+                                { icon: <EvStationIcon />, label: 'Buy a Station' },
+                            ].map((feat, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0.85 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: i * 0.07, type: 'spring', damping: 20 }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: 'rgba(255,255,255,0.04)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '99px',
+                                        padding: '7px 14px',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        color: 'rgba(255,255,255,0.75)'
+                                    }}
+                                >
+                                    {React.cloneElement(feat.icon, { style: { fontSize: '14px', color: 'var(--color-primary-container)' } })}
+                                    {feat.label}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Sub-label */}
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            style={{
+                                textAlign: 'center',
+                                fontSize: '11px',
+                                color: 'rgba(255,255,255,0.25)',
+                                marginTop: '20px',
+                                letterSpacing: '0.03em'
+                            }}
+                        >
+                            Available exclusively in the Bentork mobile app
+                        </motion.p>
+
+                        {/* Download App Button */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            style={{ textAlign: 'center', marginTop: '24px' }}
+                        >
+                            <motion.a
+                                href="https://play.google.com/store/apps/details?id=com.bentork.application"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    background: 'var(--color-primary-container)',
+                                    color: '#000',
+                                    padding: '12px 24px',
+                                    borderRadius: '16px',
+                                    textDecoration: 'none',
+                                    fontWeight: 700,
+                                    fontSize: '14px',
+                                    boxShadow: '0 8px 16px rgba(57, 226, 155, 0.2)'
+                                }}
+                            >
+                                <DownloadIcon style={{ fontSize: '20px' }} />
+                                Download App
+                            </motion.a>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* 2. LIVE IMPACT SECTION (Full Bleed) */}
+                <section className="full-bleed-section" style={{ position: 'relative', overflow: 'hidden' }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '300px',
+                        height: '300px',
+                        background: 'radial-gradient(circle, rgba(57, 226, 155, 0.08) 0%, transparent 70%)',
+                        filter: 'blur(40px)',
+                        zIndex: -1
+                    }} />
+
+                    <div className="section-inner" style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+                            <motion.div
+                                className="stat-item"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                            >
+                                <h4>1,000+</h4>
+                                <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.4, marginTop: '8px' }}>Charges Completed</p>
+                            </motion.div>
+                            <motion.div
+                                className="stat-item"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <h4>5,000+</h4>
+                                <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.4, marginTop: '8px' }}>CO2 Saved (KG)</p>
+                            </motion.div>
                         </div>
                     </div>
-                    <div className="scan-arrow">→</div>
-                </div>
+                </section>
 
-                {/* NEARBY STATIONS */}
-                <div className="section-header">
-                    <h3>Recent</h3>
-                </div>
-
-                <div className="stations-list">
-                    {stations.map((station) => (
-                        <div
-                            key={station.id}
-                            className="station-card"
-                            onClick={() => navigate(`/config-charging?ocppid=${station.id}`)}
-                            style={{ cursor: 'pointer' }}
+                {/* 3. BENTORK ADVANTAGE */}
+                <section className="landing-section" style={{ marginTop: '0' }}>
+                    <div className="section-inner">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            style={{ textAlign: 'center', marginBottom: '40px' }}
                         >
-                            <div className="station-icon-box">
-                                <BoltIcon className="station-icon" />
-                            </div>
-                            <div className="station-info">
-                                <h4>{station.name}</h4>
-                                <div className="station-meta">
-                                    <span className="meta-item"><LocationOnIcon className="meta-icon" /> {station.distance}</span>
-                                    <span className="meta-item">•</span>
-                                    <span className={`status-text ${station.status.toLowerCase()}`}>{station.status}</span>
-                                </div>
-                            </div>
-                            <div className="station-action">
-                                <div className="power-badge">{station.power}</div>
-                            </div>
+                            <h3 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 8px', background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.4))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Advantage?</h3>
+                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', maxWidth: '440px', margin: '0 auto' }}>
+                                We've redefined every step of the EV charging journey for modern drivers.
+                            </p>
+                        </motion.div>
+
+                        <div className="feature-grid">
+                            {[
+                                {
+                                    title: "Adaptive Power",
+                                    icon: <BoltIcon />,
+                                    desc: "Our chargers dynamically adjust power delivery to protect your battery's health."
+                                },
+                                {
+                                    title: "Seamless Access",
+                                    icon: <QrCodeScannerIcon />,
+                                    desc: "No apps, no hardware keys. Scan and start in less than 10 seconds."
+                                },
+                                {
+                                    title: "24/7 Monitoring",
+                                    icon: <SecurityIcon />,
+                                    desc: "Every session is monitored remotely to ensure maximum uptime and safety."
+                                },
+                                {
+                                    title: "Ready for Go",
+                                    icon: <FlashOnIcon />,
+                                    desc: "Real-time alerts letting you know exactly when you're charged and ready."
+                                }
+                            ].map((feature, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    className="benefit-card"
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1, type: 'spring', damping: 20 }}
+                                >
+                                    <div style={{ color: 'var(--color-primary-container)', marginBottom: '16px' }}>
+                                        {React.cloneElement(feature.icon, { style: { fontSize: '28px' } })}
+                                    </div>
+                                    <h5 style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 700 }}>{feature.title}</h5>
+                                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
+                                        {feature.desc}
+                                    </p>
+                                </motion.div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                </section>
+
+                {/* 4. CONTACT US */}
+                <section className="landing-section" style={{ marginTop: '20px' }}>
+                    <div className="section-inner">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(57, 226, 155, 0.1), rgba(0,0,0,0))',
+                                borderRadius: '32px',
+                                padding: '40px 24px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                textAlign: 'center',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            <MailIcon style={{ fontSize: '48px', color: 'rgba(57, 226, 155, 0.9)', marginBottom: '16px' }} />
+                            <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 12px' }}>Contact Us</h3>
+                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', marginBottom: '24px' }}>
+                                Have any questions or need support? Reach out to us, and our team will get back to you.
+                            </p>
+                            <motion.a
+                                href="mailto:support@bentork.com"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    background: 'var(--color-primary-container)',
+                                    color: '#000',
+                                    padding: '12px 24px',
+                                    borderRadius: '16px',
+                                    textDecoration: 'none',
+                                    fontWeight: 700,
+                                    fontSize: '14px',
+                                    boxShadow: '0 8px 16px rgba(57, 226, 155, 0.2)'
+                                }}
+                            >
+                                <MailIcon style={{ fontSize: '20px' }} />
+                                support@bentork.com
+                            </motion.a>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* FOOTER NOTE */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 0.2 }}
+                    viewport={{ once: true }}
+                    style={{ textAlign: 'center', marginTop: '32px', paddingBottom: '32px' }}
+                >
+                    <p style={{ fontSize: '11px', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+                        © 2021 Bentork Industries LLP. All Rights Reserved.
+                    </p>
+                </motion.div>
 
             </div>
+
+            {/* ... other code remains ... */}
+
+            {/* SCANNER GUIDE DIALOG */}
+            {showScannerGuide && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 2000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px'
+                }}>
+                    <div className="page-enter-anim" style={{
+                        background: '#212121',
+                        borderRadius: '24px',
+                        padding: '32px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        textAlign: 'center',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 24px 48px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            background: 'var(--color-primary-container)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            color: '#000'
+                        }}>
+                            <QrCodeScannerIcon style={{ fontSize: '32px' }} />
+                        </div>
+
+                        <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Scan to Start</h2>
+                        <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                            Open your phone's camera and point it at the QR code on the charger.
+                            <br /><br />
+                            Once scanned, you will be redirected automatically to the charging screen.
+                        </p>
+
+                        <button
+                            onClick={() => setShowScannerGuide(false)}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'var(--color-primary-container)',
+                                border: 'none',
+                                borderRadius: '14px',
+                                color: '#000',
+                                fontWeight: 700,
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: '0.2s',
+                                marginBottom: '12px'
+                            }}
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* BUY STATION DIALOG */}
+            {showBuyStationDialog && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 2000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px'
+                }}>
+                    <div className="page-enter-anim" style={{
+                        background: '#212121',
+                        borderRadius: '24px',
+                        padding: '32px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        textAlign: 'center',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 24px 48px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            background: 'var(--color-primary-container)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            color: '#000'
+                        }}>
+                            <EvStationIcon style={{ fontSize: '32px' }} />
+                        </div>
+
+                        <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Buy Charging Station</h2>
+                        <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                            To purchase your own Bentork charging station and start your passive income journey, please download our mobile application.
+                        </p>
+
+                        <button
+                            onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'var(--color-primary-container)',
+                                border: 'none',
+                                borderRadius: '14px',
+                                color: '#000',
+                                fontWeight: 700,
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: '0.2s',
+                                marginBottom: '12px'
+                            }}
+                        >
+                            Download App
+                        </button>
+                        <button
+                            onClick={() => setShowBuyStationDialog(false)}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '14px',
+                                color: '#fff',
+                                fontWeight: 500,
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: '0.2s'
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* TRIP PLANNER DIALOG */}
+            {showTripPlannerDialog && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 2000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px'
+                }}>
+                    <div className="page-enter-anim" style={{
+                        background: '#212121',
+                        borderRadius: '24px',
+                        padding: '32px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        textAlign: 'center',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 24px 48px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            background: 'var(--color-primary-container)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            color: '#000'
+                        }}>
+                            <MapIcon style={{ fontSize: '32px' }} />
+                        </div>
+
+                        <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Trip Planner</h2>
+                        <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+                            Plan your EV trips with ease — find charging stations along your route, estimate range, and never run out of power. Download the Bentork app to get started.
+                        </p>
+
+                        <button
+                            onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'var(--color-primary-container)',
+                                border: 'none',
+                                borderRadius: '14px',
+                                color: '#000',
+                                fontWeight: 700,
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: '0.2s',
+                                marginBottom: '12px'
+                            }}
+                        >
+                            Download App
+                        </button>
+                        <button
+                            onClick={() => setShowTripPlannerDialog(false)}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '14px',
+                                color: '#fff',
+                                fontWeight: 500,
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: '0.2s'
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
