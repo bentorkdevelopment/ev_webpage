@@ -66,6 +66,12 @@ export const ChargingProvider = ({ children }) => {
         const searchParams = new URLSearchParams(location.search)
         const paramId = searchParams.get('ocppId') || searchParams.get('ocppid')
 
+        // ⚡ SILENT REDIRECT: If we are on config-charging but have NO ID, go home instantly
+        if (!paramId && location.pathname.startsWith('/config-charging')) {
+            navigate('/home', { replace: true });
+            return;
+        }
+
         // Only fetch if we have a NEW paramId that differs from current data
         if (paramId && chargerData?.ocppId !== paramId) {
             const loadChargerFromUrl = async () => {
@@ -77,6 +83,8 @@ export const ChargingProvider = ({ children }) => {
                     }
                 } catch (err) {
                     console.error('Failed to fetch charger status from URL:', err)
+                    // If fetch fails (e.g. invalid ID), also redirect after a short delay
+                    navigate('/home', { replace: true });
                 } finally {
                     setTimeout(() => {
                         setChargerLoading(false)
@@ -85,7 +93,7 @@ export const ChargingProvider = ({ children }) => {
             }
             loadChargerFromUrl()
         }
-    }, [location.search, chargerData?.ocppId, updateChargerData])
+    }, [location.search, location.pathname, chargerData?.ocppId, updateChargerData, navigate])
 
     useEffect(() => {
         fetchPlans()
@@ -108,13 +116,25 @@ export const ChargingProvider = ({ children }) => {
         setPlansLoading(true)
         try {
             const response = await ApiService.get(API_CONFIG.ENDPOINTS.GET_ALL_PLANS)
-            const filtered = response.filter((p) => {
-                const matchesType = chargerData?.chargerType
-                    ? p.chargerType?.toLowerCase() === chargerData?.chargerType?.toLowerCase()
-                    : true;
-                const matchesStatus = p.is_active != 0;
-                return matchesType && matchesStatus;
+            let filtered = response || []
+
+            // 1. Filter out inactive plans (Logic: 0 or false is inactive; everything else is active)
+            filtered = filtered.filter(p => {
+                const activeVal = p.is_active !== undefined ? p.is_active : p.isActive;
+                return activeVal !== 0 && activeVal !== false;
             });
+
+            // 2. Strict Charger Type Matching (AC vs Non-AC)
+            if (chargerData?.chargerType) {
+                const currentChargerType = String(chargerData.chargerType).toUpperCase();
+                const isAC = currentChargerType.includes('AC');
+
+                filtered = filtered.filter(p => {
+                    const planType = (p.chargerType || '').toUpperCase();
+                    return isAC ? planType.includes('AC') : !planType.includes('AC');
+                })
+            }
+
             setPlans(filtered)
         } catch (error) {
             console.error('Failed to fetch Plans: ', error)
@@ -167,13 +187,13 @@ export const ChargingProvider = ({ children }) => {
             setError('Please select a plan')
             return
         }
-        navigate('receipt')
-    }, [selectedPlan, navigate])
+        navigate(`receipt${location.search}`)
+    }, [selectedPlan, navigate, location.search])
 
     const closeReceipt = useCallback(() => {
-        navigate('/config-charging', { replace: true })
+        navigate(`/config-charging${location.search}`, { replace: true })
         setError('')
-    }, [navigate])
+    }, [navigate, location.search])
 
     const requestNotificationPermission = useCallback(async () => {
         if (!NotificationService.isSupported) {

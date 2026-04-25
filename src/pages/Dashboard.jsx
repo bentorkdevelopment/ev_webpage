@@ -11,7 +11,9 @@ import ArrowUp from "../assets/images/ArrowUp.svg";
 import ArrowDown from "../assets/images/ArrowDown.svg";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ProfileIcon from "../assets/images/profile.svg";
-import BatteryIcon from "../assets/images/battery.svg";
+import BatteryIcon from "../assets/images/battery_model.png";
+import DownloadAppImg from "../assets/images/downloadPage.png";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [downloadAppOpen, setDownloadAppOpen] = useState(false);
 
   const [isClosing, setIsClosing] = useState(false);
 
@@ -73,19 +76,13 @@ export default function Dashboard() {
     {
       title: "Bentork Batteries",
       desc: "Power your drive with long-lasting life.",
-      buttonText: "View Range",
-      color: "#39E29B",
+      buttonText: "Learn more",
+      color: "var(--color-primary-container)",
       image: BatteryIcon
     },
     {
-      title: "New Fast Chargers",
-      desc: "Experience ultra-fast charging at downtown.",
-      buttonText: "Explore",
-      color: "#2196F3"
-    },
-    {
       title: "Refer & Earn",
-      desc: "Invite friends and earn ₹100 credits.",
+      desc: "Invite friends and earn Free Charging Credits.",
       buttonText: "Share",
       color: "#FF9800"
     }
@@ -94,7 +91,7 @@ export default function Dashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentAdIndex((prev) => (prev + 1) % ads.length);
-    }, 4000); // 4 seconds
+    }, 5000); // 4 seconds
     return () => clearInterval(interval);
   }, [ads.length]);
 
@@ -508,7 +505,7 @@ export default function Dashboard() {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            padding: 8px;
+            padding: 0px;
         }
 
         .ad-content {
@@ -616,7 +613,17 @@ export default function Dashboard() {
                 <div className="ad-content">
                   <h4 style={{ color: ad.color }}>{ad.title}</h4>
                   <p>{ad.desc}</p>
-                  <button className="ad-btn" style={{ background: ad.color, color: '#000' }}>
+                  <button 
+                    className="ad-btn" 
+                    style={{ background: ad.color, color: '#000' }}
+                    onClick={() => {
+                      if (ad.title === "Refer & Earn") {
+                        setDownloadAppOpen(true);
+                      } else if (ad.title === "Bentork Batteries") {
+                        window.open("https://bentork.com", "_blank");
+                      }
+                    }}
+                  >
                     {ad.buttonText}
                   </button>
                 </div>
@@ -757,6 +764,49 @@ export default function Dashboard() {
               Cancel
             </button>
 
+          </div>
+        </div>
+      )}
+      {/* ===== DOWNLOAD APP DIALOG ===== */}
+      {downloadAppOpen && (
+        <div 
+          className="dialog-backdrop" 
+          style={{ zIndex: 2000 }}
+          onClick={() => setDownloadAppOpen(false)}
+        >
+          <div 
+            className="dialog-content" 
+            style={{ 
+              borderRadius: '24px', 
+              padding: '24px', 
+              position: 'relative',
+              textAlign: 'center',
+              animation: 'scaleIn 0.3s ease'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <CloseIcon 
+              style={{ position: 'absolute', top: 16, right: 16, cursor: 'pointer', opacity: 0.6 }} 
+              onClick={() => setDownloadAppOpen(false)}
+            />
+            
+            <img 
+              src={DownloadAppImg} 
+              alt="App Feature" 
+              style={{ width: '100%', borderRadius: '14px', marginBottom: '20px' }} 
+            />
+            
+            <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>App Exclusive Feature</h3>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: '28px' }}>
+              Download the Bentork App to unlock the Referral Program, Slot Booking, and live session monitoring.
+            </p>
+            
+            <button 
+              className="action-btn btn-pay"
+              onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
+            >
+              Download App
+            </button>
           </div>
         </div>
       )}

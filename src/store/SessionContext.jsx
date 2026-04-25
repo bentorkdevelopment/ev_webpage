@@ -317,7 +317,7 @@ export const SessionProvider = ({ children }) => {
       if (!sessionId) {
         console.warn('No active session identified after DB scan.')
         setIsInitializing(false)
-        // navigate('/config-charging') // Optional: Redirect if strict
+        navigate('/config-charging') //Redirect - STRICT
         return { success: false }
       }
 

@@ -178,7 +178,7 @@ const SplashScreen = () => {
       if (ocppId) {
         handleNavigation(`/config-charging?ocppId=${ocppId}`);
       } else {
-        handleNavigation('/config-charging');
+        handleNavigation('/home');
       }
     } catch (error) {
       logError('SESSION_INIT_ERROR', error)

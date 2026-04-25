@@ -27,8 +27,11 @@ import ErrorIcon from "@mui/icons-material/Error";
 import SchoolIcon from "@mui/icons-material/School";
 import QuizIcon from "@mui/icons-material/Quiz";
 import BoltIcon from '@mui/icons-material/Bolt';
-import About from "./about";
 import AuthService from "../services/auth.service"; // Import service
+
+import { remoteConfig } from "../config/firebase.config";
+import { fetchAndActivate, getValue } from "firebase/remote-config";
+import { parseMaintenanceDate, isTodayOrFuture } from "../utils/dateUtils";
 
 const sidebarConfig = {
   user: {
@@ -58,8 +61,8 @@ const sidebarConfig = {
       section: "legal",
       items: [
         { label: "Terms & Conditions", icon: <DescriptionIcon />, path: "/terms" },
-        { label: "Privacy Policy", icon: <PrivacyTipIcon /> },
-        { label: "About Us", icon: <InfoOutlinedIcon /> }
+        { label: "Privacy Policy", icon: <PrivacyTipIcon />, path: "/privacy" },
+        { label: "About Us", icon: <InfoOutlinedIcon />, path: "/about" }
       ]
     }
   ]
@@ -105,10 +108,48 @@ const ConfigCharging = () => {
   const lastUsed = selectedPlan || plans[0];
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [customPowerInfoOpen, setCustomPowerInfoOpen] = useState(false);
+  const [plansInfoOpen, setPlansInfoOpen] = useState(false);
 
-  // Flicker Prevention Logic
+  // Maintenance Config
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [maintenanceDate, setMaintenanceDate] = useState('');
+
+  useEffect(() => {
+    const fetchMaintenance = async () => {
+      if (!remoteConfig) {
+        // Fallback for missing/invalid keys when remoteConfig is null
+        setIsMaintenance(false);
+        setMaintenanceDate('');
+        return;
+      }
+      try {
+        remoteConfig.defaultConfig = {
+          maintenance_key: false,
+          maintenance_date: ''
+        };
+        await fetchAndActivate(remoteConfig);
+        setIsMaintenance(getValue(remoteConfig, 'maintenance_key').asBoolean());
+        setMaintenanceDate(getValue(remoteConfig, 'maintenance_date').asString());
+      } catch (e) {
+        // Fallback for missing/invalid keys or errors (read from cache if possible)
+        try {
+          const fbMaint = getValue(remoteConfig, 'maintenance_key').asBoolean();
+          const fbDate = getValue(remoteConfig, 'maintenance_date').asString();
+          setIsMaintenance(fbMaint);
+          setMaintenanceDate(fbDate || '');
+        } catch (_) {
+          console.warn('Firebase Remote Config fetch failed:', e);
+          setIsMaintenance(false);
+          setMaintenanceDate('');
+        }
+      }
+    };
+    fetchMaintenance();
+  }, []);
+
+  // Flicker Prevention: Identify if the URL has a charger ID that doesn't match loaded data yet
   const [searchParams] = useSearchParams();
   const paramOcppId = searchParams.get('ocppId') || searchParams.get('ocppid');
 
@@ -224,11 +265,12 @@ const ConfigCharging = () => {
        /* ===== PAGE ===== */
 .config-page {
   min-height: 100vh;
-  background: var(--color-matte-black);
+  background: #121212;
   color: #fff;
-  padding-top: 68px;
+  padding-top: 56px;
   padding-bottom: 100px;
-  font-family: Roboto, sans-serif;
+  font-family: var(--font-primary);
+  font-size: 14px;
 }
 
 /* ===== TOP BAR ===== */
@@ -237,11 +279,11 @@ const ConfigCharging = () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 82px;
+  height: 56px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px;
+  padding: 0 16px;
   z-index: 100;
   background: transparent;
 }
@@ -268,23 +310,24 @@ const ConfigCharging = () => {
 }
 
 .menu {
-  font-size: 40px;
+  font-size: 22px;
   font-weight: var(--font-weight-regular);
 }
 
 .top-logo {
-  height: 68px;
-  width: 128px;
+  height: 20px;
+  width: auto;
 }
 
 .wallet-pill {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;background: rgba(36, 36, 36, 0.15);
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.13);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 12px;
+  border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   color: #fff;
   font-size: 12px;
@@ -294,7 +337,7 @@ const ConfigCharging = () => {
 
 /* ===== MENU ICON ===== */
 .menu-icon {
-  font-size: 26px;
+  font-size: 22px;
   cursor: pointer;
 }
 
@@ -460,10 +503,10 @@ const ConfigCharging = () => {
 
 /* ===== CHARGER CARD ===== */
 .charger-name {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-white, #dbe9ff);
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -472,18 +515,54 @@ const ConfigCharging = () => {
   text-overflow: ellipsis;
 }
 
+/* ===== MAINTENANCE BANNER ===== */
+.maintenance-banner {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 171, 0, 0.12);
+  border: 0px solid rgba(255, 171, 0, 0.35);
+  border-radius: 0px;
+  padding: 12px 16px;
+  margin: 16px 0px 0 0px;
+}
+.maintenance-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  background: rgba(255, 171, 0, 0.22);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.maintenance-banner-content {
+  flex: 1;
+}
+.maintenance-banner-title {
+  color: #FFAB00;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+}
+.maintenance-banner-subtitle {
+  color: rgba(255, 200, 80, 0.85);
+  font-size: 11px;
+  line-height: 1.3;
+  margin: 0;
+}
+
 .charger-card {
     margin: 16px;
-    background: var(--colorcard-bg);
-    border-radius: 14px;
-    padding: 20px 0px;
+    background: rgba(30, 30, 30, 0.35);
+    border-radius: 20px;
+    padding: 16px 20px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
     min-height: fit-content;
-    // box-shadow: 10px 4px 20px rgba(7, 2, 2, 0);
-    // animation: glowEnter 0.5s ease-out 0.0s forwards;
+    border: 1px solid #333;
     }
 
 .charger-info {
@@ -507,11 +586,11 @@ const ConfigCharging = () => {
 
 .charger-meta {
   width: 100%;
-  margin-top: 12px;
-  font-size: 13px;
+  margin-top: 8px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.5;
-  color: #e0e0e0;
+  color: #aaa;
 }
 
 .charger-img-container {
@@ -528,10 +607,11 @@ const ConfigCharging = () => {
 
 /* ===== SLIDER ===== */
 .label {
-  font-weight: var(--font-weight-regular);
-  margin: 28px 0 6px;
-  font-size: 12px;
-  padding: 0px 16px;
+  font-weight: 700;
+  margin: 24px 16px 8px;
+  font-size: 14px;
+  padding: 0px 0px;
+  color: #fff;
 }
 
 md-slider {
@@ -557,7 +637,15 @@ md-slider {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20px 16px 10px;
+  margin: 18px 16px 10px;
+  border-top: 1px solid #333;
+  padding-top: 10px;
+}
+
+.plans-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .last-used-pill {
@@ -578,37 +666,39 @@ margin: 8px 0px;
 }
 
 .plan {
-  background: #2b2b2bB2;
-  padding: 12px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--color-on-primary-container);
+  background: rgba(255,255,255,0.05);
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
   outline: 2px solid transparent;
   display: flex;
   height: fit-content;
   justify-content: space-between;
   align-items: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 .plan strong{
-  font-size: 18px;
-    font-weight: 600;
+  font-size: 14px;
+    font-weight: 400;
 }
 .plan span {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.7;
     font-weight: 400;
 }
 
 .plan .price {
-  color: #39E29B;
-  font-size: 18px;
+  color: var(--color-primary-container);
+  font-size: 16px;
   font-weight: 700;
 }
 
 .plan.active {
-  background: #2b2b2b;
-  outline: 2px solid var(--color-primary-container);
-  border-color: transparent; /* Optional: hide inner border when active for cleaner look */
+  background: #252525;
+  outline: 1px solid var(--color-primary-container);
+  border-color: transparent;
+  box-shadow: 0 0 18px rgba(9, 35, 26, 0.8), 0 0 24px rgba(57, 226, 155, 0.4);
 }
 
 .plan.active .plan-icon-box {
@@ -636,17 +726,18 @@ margin: 8px 0px;
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: 95%;
+  width: calc(100% - 32px);
   max-width: 420px;
-  padding: 14px 24px;
-  background: #ffffffff;
-  color: var(--color-matte-black);
-  border-radius: 12px;
+  padding: 16px 24px;
+  background: #fff;
+  color: #000;
+  border-radius: 14px;
   font-size: 14px;
   font-family: var(--font-primary);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 700;
   border: none;
   z-index: 99;
+  cursor: pointer;
   animation: slideUpBtn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
@@ -667,13 +758,14 @@ margin: 8px 0px;
 .status-pill {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 10px;
-  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 6px;
   text-transform: capitalize;
   width: fit-content;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .status-available {
@@ -880,7 +972,13 @@ color: var(--color-on-primary-container);
               onClick={() => setDrawerOpen(true)}
             />
 
-            <img src={Logo} className="top-logo" />
+            <img 
+              src={Logo} 
+              className="top-logo" 
+              onClick={() => navigate('/')}
+              style={{ cursor: 'pointer' }}
+              alt="Bentork Logo"
+            />
           </div>
 
           <button
@@ -963,13 +1061,13 @@ color: var(--color-on-primary-container);
                         } else if (item.label === "Privacy Policy") {
                           navigate("/privacy");
                         } else if (item.label === "About Us") {
-                          setAboutOpen(true);
+                          navigate("/about");
                         } else if (item.label === "Tutorial") {
                           navigate("/onboarding-1");
                         } else if (item.label === "FAQ") {
                           navigate("/faq");
                         } else if (item.label === "Download App") {
-                          setDownloadDialogOpen(true);
+                          window.open("https://play.google.com/store/apps/details?id=com.bentork.application&hl=en_IN", "_blank");
                         } else if (item.label === "Help") {
                           window.open("https://bentork.com/contacts/");
                         }
@@ -994,8 +1092,7 @@ color: var(--color-on-primary-container);
           </div>
         </div>
 
-        {/* ABOUT SHEET */}
-        <About isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+        {/* DIALOGS */}
 
 
 
@@ -1033,6 +1130,70 @@ color: var(--color-on-primary-container);
           </div>
         ) : (
           <div className="page-enter-anim" style={{ minHeight: '100%' }}>
+
+            {/* ===== MAINTENANCE BANNER ===== */}
+            {(() => {
+              const mDate = parseMaintenanceDate(maintenanceDate);
+              const isUpcoming = mDate && isTodayOrFuture(mDate) && !isMaintenance;
+              const showBanner = isMaintenance || isUpcoming;
+
+              if (!showBanner) return null;
+
+              const isOngoing = isMaintenance;
+              const title = isOngoing ? "Ongoing Maintenance" : "Upcoming Maintenance Break";
+              const subtitle = isOngoing
+                ? "Some services are temporarily unavailable. We appreciate your patience."
+                : `On ${maintenanceDate}, some services will be unavailable. Please plan accordingly.`;
+
+              return (
+                <div className="maintenance-banner animate-fade">
+                  <div className="maintenance-banner-icon">
+                    <WarningIcon style={{ fontSize: 20, color: "#FFAB00" }} />
+                  </div>
+                  <div className="maintenance-banner-content">
+                    <h4 className="maintenance-banner-title">{title}</h4>
+                    <p className="maintenance-banner-subtitle">{subtitle}</p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ===== APP FEATURE TEASER MINI CARD ===== */}
+            <div
+              className="animate-fade"
+              style={{
+                margin: '16px 16px 0',
+                padding: '12px 16px',
+                background: 'linear-gradient(135deg, rgba(57, 226, 155, 0.1), rgba(0,0,0,0))',
+                borderRadius: '16px',
+                border: '1px solid rgba(57, 226, 155, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+              onClick={() => setDownloadDialogOpen(true)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '50%',
+                  background: 'rgba(57, 226, 155, 0.2)', color: 'var(--color-primary-container)',
+                  display: 'flex', justifyContent: 'center', alignItems: 'center'
+                }}>
+                  <BoltIcon style={{ fontSize: '18px' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#fff' }}>Book a Slot</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>Reserve your charging time</div>
+                </div>
+              </div>
+              <div style={{
+                background: 'var(--color-primary-container)', color: '#000',
+                padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700
+              }}>
+                Book
+              </div>
+            </div>
 
             {/* ===== CHARGER CARD ===== */}
             {/* ===== CHARGER CARD ===== */}
@@ -1081,7 +1242,13 @@ color: var(--color-on-primary-container);
 
 
             {/* ===== CUSTOM POWER INPUT ===== */}
-            <div className="label">Custom Power</div>
+            <div className="label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              Custom Power
+              <InfoOutlinedIcon
+                style={{ fontSize: '16px', color: '#aaa', cursor: 'pointer' }}
+                onClick={() => setCustomPowerInfoOpen(true)}
+              />
+            </div>
             <div style={{ padding: '0 16px 20px' }}>
               <div style={{ position: 'relative' }}>
                 <input
@@ -1093,13 +1260,13 @@ color: var(--color-on-primary-container);
                   onChange={handleInputChange}
                   style={{
                     width: '100%',
-                    padding: '16px',
+                    padding: '14px 16px',
                     paddingRight: '48px',
                     borderRadius: '12px',
-                    border: '0px solid #00000000',
-                    background: '#2b2b2bb5',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(255,255,255,0.05)',
                     color: '#fff',
-                    fontSize: '18px',
+                    fontSize: '14px',
                     fontWeight: '500',
                     outline: 'none'
                   }}
@@ -1128,7 +1295,7 @@ color: var(--color-on-primary-container);
             </div>
 
             {/* Quick Add Chips */}
-            <div style={{ padding: '0 16px', display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '-12px' }}>
+            <div style={{ padding: '8px 16px', display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '-12px' }}>
               {(chargerData?.chargerType?.toLowerCase().includes('dc') || chargerData?.chargerType?.toLowerCase().includes('fast')
                 ? [10, 30, 50, 100]
                 : [1, 5, 10]
@@ -1146,11 +1313,11 @@ color: var(--color-on-primary-container);
                     updatePowerValue(finalVal);
                   }}
                   style={{
-                    background: '#303030',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
-                    color: '#fff',
+                    background: 'rgba(255, 255, 255, 0.85)',
+                    border: '0px solid rgba(255,255,255,0.1)',
+                    borderRadius: '18px',
+                    padding: '9px 16px',
+                    color: '#0e0e0eff',
                     cursor: 'pointer',
                     fontSize: '12px'
                   }}
@@ -1163,7 +1330,13 @@ color: var(--color-on-primary-container);
 
             {/* ===== PLANS ===== */}
             <div className="plans-header">
-              <h3>{isValidCustomPower ? 'Custom Plan' : 'Plans'}</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isValidCustomPower ? 'Custom Plan' : 'Plans'}
+                <InfoOutlinedIcon
+                  style={{ fontSize: '16px', color: '#aaa', cursor: 'pointer', fontWeight: 'normal' }}
+                  onClick={() => setPlansInfoOpen(true)}
+                />
+              </h3>
               {isValidCustomPower && (
                 <span
                   className="last-used-pill"
@@ -1188,14 +1361,14 @@ color: var(--color-on-primary-container);
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div className="plan-icon-box">
-                      <BoltIcon style={{ fontSize: '24px' }} />
+                      <BoltIcon style={{ fontSize: '20px' }} />
                     </div>
                     <div>
-                      <strong style={{ textTransform: 'uppercase' }}>Custom Power</strong>
+                      <strong style={{ textTransform: 'capitalize' }}>Custom Power</strong>
                       <br />
                       <span>{powerValue} kW</span>
                       <br />
-                      <span style={{ fontSize: '10px', opacity: 0.6 }}>Rate: ₹{chargerRate.toFixed(2)} / kWh</span>
+                      <span style={{ fontSize: '10px', opacity: 0.5 }}>Rate: ₹{chargerRate.toFixed(2)} / kWh</span>
                     </div>
                   </div>
                   <span className="price">₹{(powerValue * chargerRate).toFixed(2)}</span>
@@ -1238,12 +1411,12 @@ color: var(--color-on-primary-container);
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div className="plan-icon-box">
-                            <BoltIcon style={{ fontSize: '24px' }} />
+                            <BoltIcon style={{ fontSize: '20px' }} />
                           </div>
                           <div>
-                            <strong style={{ textTransform: 'uppercase' }}>{plan.planName}</strong>
+                            <strong style={{ textTransform: 'capitalize' }}>{plan.planName?.toLowerCase()}</strong>
                             <br />
-                            <span style={{ fontSize: '12px', opacity: 0.7 }}>
+                            <span style={{ fontSize: '11px', opacity: 0.6 }}>
                               Rate: ₹{chargerRate} /kW • {plan.durationMin} mins
                             </span>
                           </div>
@@ -1263,8 +1436,8 @@ color: var(--color-on-primary-container);
                       opacity: 0.7
                     }}>
                       <ErrorIcon style={{ fontSize: '48px', marginBottom: '12px', color: '#ff5252' }} />
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>No Plans Found</h4>
-                      <p style={{ margin: 0, fontSize: '14px', color: '#aaa' }}>Try using custom power above</p>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>No Plans Found</h4>
+                      <p style={{ margin: 0, fontSize: '12px', color: '#aaa' }}>Try using custom power above</p>
                     </div>
                   )}
                 </div>
@@ -1326,7 +1499,7 @@ color: var(--color-on-primary-container);
                 <div style={{ textAlign: "center", margin: "20px 0" }}>
                   <img
                     src={DownloadAppImg}
-                    alt="Coming Soon"
+                    alt="App Only Feature"
                     style={{ width: "100%", borderRadius: "8px" }}
                   />
                 </div>
@@ -1335,37 +1508,132 @@ color: var(--color-on-primary-container);
                 <h2
                   style={{
                     textAlign: "center",
-                    marginBottom: "8px",
+                    marginBottom: "12px",
                     color: "#fff",
+                    fontSize: "18px"
                   }}
                 >
-                  Coming Soon
+                  App Exclusive Feature
                 </h2>
-                <p style={{ textAlign: "center", color: "#aaa" }}>Stay Tuned!</p>
+                <p style={{ textAlign: "center", color: "#aaa", fontSize: "14px", lineHeight: "1.5", marginBottom: "24px", padding: "0 10px" }}>
+                  Download the Bentork App to unlock Slot Booking, Live Session Tracking, and many more advanced capabilities.
+                </p>
+
+                <button
+                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
+                    style={{ width: "100%", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "15px" }}
+                >
+                    Download App
+                </button>
               </div>
             </div>
           )
         }
 
-
-
-        {/* Charger Missing Warning */}
-        {(!chargerData?.ocppId && !isPageLoading) && (
-          <div className="warning-dialog-overlay">
-            <div className="warning-dialog">
-              <div className="warning-icon-container">
-                <WarningIcon className="warning-icon-lg" />
+        {/* Custom Power Info Dialog */}
+        {
+          customPowerInfoOpen && (
+            <div
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 999 }}
+              onClick={() => setCustomPowerInfoOpen(false)}
+            >
+              <div
+                style={{ background: "#212121", padding: "20px", borderRadius: "16px", width: "90%", maxWidth: "400px", position: "relative", border: "1px solid #333" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: "16px", gap: '8px' }}>
+                  <BoltIcon style={{ color: "var(--color-primary-container)" }} />
+                  <h2 style={{ margin: 0, color: "#fff", fontSize: "18px" }}>Custom Power</h2>
+                </div>
+                <CloseIcon
+                  style={{ position: "absolute", top: "20px", right: "20px", cursor: "pointer", color: "#aaa" }}
+                  onClick={() => setCustomPowerInfoOpen(false)}
+                />
+                <p style={{ color: "#aaa", fontSize: "14px", lineHeight: "1.5" }}>
+                  Set a specific charging limit in kilowatts (kW) tailored to your immediate needs. This mode gives you precise control over exactly how much energy you want your vehicle to draw during this session.
+                </p>
+                <button
+                  onClick={() => setCustomPowerInfoOpen(false)}
+                  style={{ width: "100%", marginTop: "24px", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer" }}
+                >
+                  Got it
+                </button>
               </div>
-              <h3 className="warning-title">Charger Not Found</h3>
-              <p className="warning-desc">
-                We couldn't detect a valid charger ID. Please scan the QR code on the charger to proceed.
+            </div>
+          )
+        }
+
+        {/* Plans Info Dialog */}
+        {
+          plansInfoOpen && (
+            <div
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 999 }}
+              onClick={() => setPlansInfoOpen(false)}
+            >
+              <div
+                style={{ background: "#212121", padding: "20px", borderRadius: "16px", width: "90%", maxWidth: "400px", position: "relative", border: "1px solid #333" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: "16px", gap: '8px' }}>
+                  <BoltIcon style={{ color: "var(--color-primary-container)" }} />
+                  <h2 style={{ margin: 0, color: "#fff", fontSize: "18px" }}>Charging Plans</h2>
+                </div>
+                <CloseIcon
+                  style={{ position: "absolute", top: "20px", right: "20px", cursor: "pointer", color: "#aaa" }}
+                  onClick={() => setPlansInfoOpen(false)}
+                />
+                <p style={{ color: "#aaa", fontSize: "14px", lineHeight: "1.5" }}>
+                  Select from our predefined charging packages. These plans are optimized to offer structured pricing and specific charging durations tailored to common driving requirements. Choose the one that best suits your routine!
+                </p>
+                <button
+                  onClick={() => setPlansInfoOpen(false)}
+                  style={{ width: "100%", marginTop: "24px", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer" }}
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Full-screen Maintenance Override */}
+        {isMaintenance && (
+          <div style={{
+            position: "fixed",
+            inset: 0,
+            background: "#121212", // Solid full screen background, no transparency
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 99999,
+            padding: "24px"
+          }}>
+            <div style={{
+              width: "100%",
+              maxWidth: "360px",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center"
+            }}>
+              <WarningIcon style={{ fontSize: 64, color: "#FFAB00", marginBottom: "24px" }} />
+              <h2 style={{ margin: "0 0 12px 0", color: "#fff", fontSize: "18px" }}>Ongoing Maintenance</h2>
+              <p style={{ color: "#aaa", fontSize: "12px", lineHeight: "1.6", margin: "0 0 32px 0" }}>
+                Our services are temporarily offline for an important system update. We are working hard to restore service as quickly as possible.
+                <br /><br />
+                Please download the Bentork EV App to get notified automatically once the system is back online.
               </p>
-              <button className="warning-btn" onClick={() => navigate('/home')}>
-                Go Home
+              <button
+                onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application&hl=en_IN', '_blank')}
+                style={{ width: "60%", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "28px", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "15px" }}
+              >
+                Download App
               </button>
             </div>
           </div>
         )}
+
+        {/* Auto-redirect handled in useEffect above */}
 
         <Outlet />
       </div >
