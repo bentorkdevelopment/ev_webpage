@@ -324,11 +324,11 @@ const ConfigCharging = () => {
   align-items: center;
   gap: 10px;
   padding: 8px 18px;
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.16);
   color: #fff;
   font-size: 12px;
   font-family: var(--font-primary);
@@ -554,7 +554,7 @@ const ConfigCharging = () => {
 
 .charger-card {
     margin: 16px;
-    background: rgba(30, 30, 30, 0.35);
+    background: var(--color-matte-black);
     border-radius: 20px;
     padding: 16px 20px;
     display: flex;
@@ -562,7 +562,7 @@ const ConfigCharging = () => {
     align-items: center;
     gap: 16px;
     min-height: fit-content;
-    border: 1px solid #333;
+    border: 0px solid #333;
     }
 
 .charger-info {
@@ -669,7 +669,7 @@ margin: 8px 0px;
   background: rgba(255,255,255,0.05);
   padding: 14px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.1);
   outline: 2px solid transparent;
   display: flex;
   height: fit-content;
@@ -695,14 +695,14 @@ margin: 8px 0px;
 }
 
 .plan.active {
-  background: #252525;
-  outline: 1px solid var(--color-primary-container);
+  background: #39e29c24;
+  outline: 2px solid var(--color-primary-container);
   border-color: transparent;
-  box-shadow: 0 0 18px rgba(9, 35, 26, 0.8), 0 0 24px rgba(57, 226, 155, 0.4);
+  box-shadow: 0 0 18px rgba(9, 35, 26, 0.8), 0 0 24px #39e29b66;
 }
 
 .plan.active .plan-icon-box {
-    background: var(--color-primary-container);
+    background: var(--color-white);
     color: var(--color-on-primary-container);
     box-shadow: 0 0 12px rgba(57, 226, 155, 0.4);
 }
@@ -972,9 +972,9 @@ color: var(--color-on-primary-container);
               onClick={() => setDrawerOpen(true)}
             />
 
-            <img 
-              src={Logo} 
-              className="top-logo" 
+            <img
+              src={Logo}
+              className="top-logo"
               onClick={() => navigate('/')}
               style={{ cursor: 'pointer' }}
               alt="Bentork Logo"
@@ -1189,7 +1189,7 @@ color: var(--color-on-primary-container);
               </div>
               <div style={{
                 background: 'var(--color-primary-container)', color: '#000',
-                padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700
+                padding: '6px 24px', borderRadius: '20px', fontSize: '11px', fontWeight: 700
               }}>
                 Book
               </div>
@@ -1260,11 +1260,11 @@ color: var(--color-on-primary-container);
                   onChange={handleInputChange}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
+                    padding: '18px 16px',
                     paddingRight: '48px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '16px',
+                    border: '3px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(255,255,255,0.00)',
                     color: '#fff',
                     fontSize: '14px',
                     fontWeight: '500',
@@ -1313,11 +1313,11 @@ color: var(--color-on-primary-container);
                     updatePowerValue(finalVal);
                   }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.85)',
+                    background: 'var(--color-matte-black)',
                     border: '0px solid rgba(255,255,255,0.1)',
                     borderRadius: '18px',
                     padding: '9px 16px',
-                    color: '#0e0e0eff',
+                    color: '#fff',
                     cursor: 'pointer',
                     fontSize: '12px'
                   }}
@@ -1417,7 +1417,7 @@ color: var(--color-on-primary-container);
                             <strong style={{ textTransform: 'capitalize' }}>{plan.planName?.toLowerCase()}</strong>
                             <br />
                             <span style={{ fontSize: '11px', opacity: 0.6 }}>
-                              Rate: ₹{chargerRate} /kW • {plan.durationMin} mins
+                              Rate: ₹{chargerRate} /kW {Number(chargerData?.platformFeePerKwh || 0) > 0 ? `+ ₹${Number(chargerData?.platformFeePerKwh)}/kW fee ` : ''}• {plan.durationMin} mins
                             </span>
                           </div>
                         </div>
@@ -1520,10 +1520,10 @@ color: var(--color-on-primary-container);
                 </p>
 
                 <button
-                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
-                    style={{ width: "100%", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "15px" }}
+                  onClick={() => window.open('https://play.google.com/store/apps/details?id=com.bentork.application', '_blank')}
+                  style={{ width: "100%", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer", fontSize: "15px" }}
                 >
-                    Download App
+                  Download App
                 </button>
               </div>
             </div>
@@ -1538,7 +1538,7 @@ color: var(--color-on-primary-container);
               onClick={() => setCustomPowerInfoOpen(false)}
             >
               <div
-                style={{ background: "#212121", padding: "20px", borderRadius: "16px", width: "90%", maxWidth: "400px", position: "relative", border: "1px solid #333" }}
+                style={{ background: "#212121", padding: "25px 20px", borderRadius: "28px", width: "90%", maxWidth: "400px", position: "relative", border: "0px solid #333" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: "16px", gap: '8px' }}>
@@ -1552,12 +1552,14 @@ color: var(--color-on-primary-container);
                 <p style={{ color: "#aaa", fontSize: "14px", lineHeight: "1.5" }}>
                   Set a specific charging limit in kilowatts (kW) tailored to your immediate needs. This mode gives you precise control over exactly how much energy you want your vehicle to draw during this session.
                 </p>
-                <button
-                  onClick={() => setCustomPowerInfoOpen(false)}
-                  style={{ width: "100%", marginTop: "24px", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer" }}
-                >
-                  Got it
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: "24px" }}>
+                  <button
+                    onClick={() => setCustomPowerInfoOpen(false)}
+                    style={{ width: "fit-content", padding: "14px 36px", background: "var(--color-card-bg)", border: "none", borderRadius: "28px", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+                  >
+                    Got it
+                  </button>
+                </div>
               </div>
             </div>
           )
@@ -1571,7 +1573,7 @@ color: var(--color-on-primary-container);
               onClick={() => setPlansInfoOpen(false)}
             >
               <div
-                style={{ background: "#212121", padding: "20px", borderRadius: "16px", width: "90%", maxWidth: "400px", position: "relative", border: "1px solid #333" }}
+                style={{ background: "#212121", padding: "25px 20px", borderRadius: "28px", width: "90%", maxWidth: "400px", position: "relative", border: "0px solid #333" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: "16px", gap: '8px' }}>
@@ -1585,12 +1587,14 @@ color: var(--color-on-primary-container);
                 <p style={{ color: "#aaa", fontSize: "14px", lineHeight: "1.5" }}>
                   Select from our predefined charging packages. These plans are optimized to offer structured pricing and specific charging durations tailored to common driving requirements. Choose the one that best suits your routine!
                 </p>
-                <button
-                  onClick={() => setPlansInfoOpen(false)}
-                  style={{ width: "100%", marginTop: "24px", padding: "12px", background: "var(--color-primary-container)", border: "none", borderRadius: "12px", color: "#000", fontWeight: "bold", cursor: "pointer" }}
-                >
-                  Got it
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: "24px" }}>
+                  <button
+                    onClick={() => setPlansInfoOpen(false)}
+                    style={{ width: "fit-content", padding: "14px 36px", background: "var(--color-card-bg)", border: "none", borderRadius: "28px", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
+                  >
+                    Got it
+                  </button>
+                </div>
               </div>
             </div>
           )

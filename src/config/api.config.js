@@ -11,6 +11,7 @@ const API_CONFIG = {
   ENDPOINTS: {
     // LOGIN: '/api/user/login',
     LOGIN: '/api/user/google-login-success',
+    TRUECALLER_STATUS: (requestId) => `/api/user/truecaller/status/${requestId}`,
     // VERIFY_TOKEN: '/user/verify',
     // REFRESH_TOKEN: '/user/refresh',
     GET_USER_BY_EMAIL: (email) => `/api/user/byemail/${email}`,
