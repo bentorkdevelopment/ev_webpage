@@ -175,7 +175,10 @@ const Invoice = () => {
 
   const energyVal = Number(sessionData.energyUsed || 0)
   const rateVal = Number(sessionData.rate || sessionData.plan?.rate || 0)
-  const totalCostVal = Number(sessionData.finalCost || sessionData.amountDebited || (energyVal * rateVal))
+  
+  const platformFee = sessionData?.platformFee !== undefined && sessionData?.platformFee !== null ? Number(sessionData.platformFee) : 0;
+
+  const totalCostVal = Number(sessionData.finalCost || sessionData.amountDebited || ((energyVal * rateVal) + platformFee))
 
   const energy = energyVal.toFixed(2)
   const rate = rateVal.toFixed(2)
@@ -439,7 +442,11 @@ const Invoice = () => {
             </div>
             <div className="item-row">
               <span className="item-label">Rate Info</span>
-              <span className="item-value">₹{chargerData.rate} / kWh</span>
+              <span className="item-value">₹{chargerData.rate || rate} / kWh</span>
+            </div>
+            <div className="item-row">
+              <span className="item-label">PST (Platform fees)</span>
+              <span className="item-value">₹{platformFee.toFixed(2)}</span>
             </div>
           </div>
 

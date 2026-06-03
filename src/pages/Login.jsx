@@ -10,7 +10,7 @@ import {
   Button
 } from '@mui/material'
 import "../assets/styles/global.css"
-import { Google as GoogleIcon } from '@mui/icons-material'
+import { Google as GoogleIcon, PhoneAndroid as PhoneAndroidIcon } from '@mui/icons-material'
 import { useAuth } from '../store/AuthContext'
 import ApiService from '../services/api.service'
 import API_CONFIG from '../config/api.config'
@@ -29,6 +29,7 @@ const Login = () => {
   const { updateChargerData, login: contextLogin, transactionHistory } = useAuth()
 
   const [animate, setAnimate] = useState(false);
+  const [isMobileAndroid, setIsMobileAndroid] = useState(false);
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,6 +37,7 @@ const Login = () => {
   useEffect(() => {
     setTimeout(() => setAnimate(true), 200);
     checkOAuthCallback();
+    setIsMobileAndroid(/Android/i.test(navigator.userAgent));
   }, [])
 
   const checkOAuthCallback = async () => {
@@ -95,6 +97,108 @@ const Login = () => {
     }
   }
 
+  const generateNonce = (length) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let result = ''
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return result
+  }
+
+  const startTruecallerPolling = (requestId) => {
+    let attempts = 0
+    const maxAttempts = 15 // 45 seconds total
+
+    const interval = setInterval(async () => {
+      attempts++
+      try {
+        const result = await AuthService.checkTruecallerStatus(requestId)
+        if (result && result.success) {
+          clearInterval(interval)
+          setLoading(false)
+
+          console.log('Truecaller login successful:', result.user)
+
+          const ocppIdFromUrl = sessionStorage.getItem('ocppId')
+          if (ocppIdFromUrl && result.token) {
+            try {
+              const chargerData = await ApiService.get(
+                API_CONFIG.ENDPOINTS.GET_CHARGER(ocppIdFromUrl),
+                null,
+                { headers: { Authorization: `Bearer ${result.token}` } }
+              )
+              updateChargerData(chargerData)
+            } catch (err) {
+              console.error('Failed to load charger:', err)
+            }
+          }
+
+          const transactions = await AuthService.loadTransaction(result.user.id, 10)
+          transactionHistory(transactions || [])
+
+          const hasSeenOnboarding = CacheService.getOnboardingStatus()
+          if (!hasSeenOnboarding) {
+            CacheService.saveOnboardingStatus(true)
+            navigate('/onboarding-1')
+          } else {
+            if (ocppIdFromUrl) {
+              navigate(`/config-charging?ocppid=${ocppIdFromUrl}`)
+            } else {
+              navigate('/config-charging')
+            }
+          }
+        } else if (result && result.error && !result.pending) {
+          clearInterval(interval)
+          setLoading(false)
+          setError(result.error || 'Truecaller verification failed.')
+        }
+      } catch (err) {
+        console.error('Error checking Truecaller status:', err)
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval)
+        setLoading(false)
+        setError('Truecaller verification timed out. Please try again.')
+      }
+    }, 3000)
+  }
+
+  const handleTruecallerLogin = () => {
+    setError('')
+    setLoading(true)
+
+    if (ocppId) {
+      sessionStorage.setItem('ocppId', ocppId)
+    }
+
+    const partnerKey = import.meta.env.VITE_TRUECALLER_PARTNER_KEY || 'vpvxj941xqvy1ms5asykeugp_u_bsvs8rvnss5hwqcc'
+    const requestId = generateNonce(16)
+    const partnerName = 'Bentork EV'
+    const privacyUrl = encodeURIComponent(window.location.origin + '/terms')
+    const termsUrl = encodeURIComponent(window.location.origin + '/terms')
+
+    let appOpened = false
+    const handleBlur = () => {
+      appOpened = true
+    }
+
+    window.addEventListener('blur', handleBlur)
+
+    window.location.href = `truecallersdk://truesdk/web_verify?type=btmsheet&requestNonce=${requestId}&partnerKey=${partnerKey}&partnerName=${partnerName}&lang=en&privacyUrl=${privacyUrl}&termsUrl=${termsUrl}&loginPrefix=logIn&ctaColor=%230086ff&ctaTextColor=%23ffffff`
+
+    setTimeout(() => {
+      window.removeEventListener('blur', handleBlur)
+      if (!appOpened) {
+        setLoading(false)
+        setError('Truecaller app is not installed or unavailable on this device.')
+      } else {
+        startTruecallerPolling(requestId)
+      }
+    }, 1500)
+  }
+
   const handleGoogleSuccess = async () => {
     setLoading(true)
 
@@ -128,9 +232,36 @@ const Login = () => {
 
         {/* Buttons Section */}
         <div className="action-section">
-          <button className="google-btn-dark" onClick={handleGoogleSuccess}>
+          {loading && (
+            <Box display="flex" justifyContent="center" mb={2}>
+              <CircularProgress size={24} sx={{ color: '#008f45' }} />
+            </Box>
+          )}
+
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                borderRadius: '15px', 
+                mb: 2, 
+                backgroundColor: 'rgba(211, 47, 47, 0.1)', 
+                color: '#ff8a80', 
+                border: '1px solid rgba(211, 47, 47, 0.2)',
+                '& .MuiAlert-icon': { color: '#ff8a80' } 
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+
+          <button className="google-btn-dark" onClick={handleGoogleSuccess} disabled={loading}>
             <GoogleIcon className="google-icon" />
             Continue with Google
+          </button>
+
+          <button className="truecaller-btn-dark" onClick={handleTruecallerLogin} disabled={loading}>
+            <PhoneAndroidIcon className="google-icon" />
+            Continue with Truecaller
           </button>
         </div>
 

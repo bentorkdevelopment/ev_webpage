@@ -96,6 +96,23 @@ class AuthService {
     }
   }
 
+  static async checkTruecallerStatus(requestId) {
+    try {
+      const response = await ApiService.get(
+        API_CONFIG.ENDPOINTS.TRUECALLER_STATUS(requestId)
+      )
+
+      if (response && response.token) {
+        // Retrieve and build session using the token
+        return await this.googleLogin(response.token)
+      }
+      return { success: false, pending: true }
+    } catch (error) {
+      console.warn('Truecaller status check pending/failed:', error)
+      return { success: false, pending: true, error: error.message }
+    }
+  }
+
   static async userByEmail(email) {
     const token = CacheService.getToken()
 
